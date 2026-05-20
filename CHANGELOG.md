@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.0 — 2026-05-20
+
+### Added
+
+- **Schema migration** `supabase/migrations/001_initial_schema.sql` — all 7 tables (`exercises`, `workout_days`, `workout_day_exercises`, `workout_sessions`, `set_logs`, `body_weight_logs`, `user_preferences`) with 4 performance indexes
+- **Seed file** `supabase/seed.sql` — 44 exercises across 7 muscle groups (Back, Chest, Shoulders, Biceps, Triceps, Legs, Core), all 7 workout days (Mon–Sun, Sat/Sun as rest days), and all workout_day_exercises rows with the locked rep arrays from the workout plan. Exercise UUIDs resolved at seed time via name-based subqueries.
+- **TypeScript `Database` type** `lib/types/database.ts` — Supabase-cli-style `Row`/`Insert`/`Update` mappings for all 7 tables, ready to use with `createBrowserClient<Database>()`
+- **README** — "Database setup" section with step-by-step Supabase SQL Editor instructions
+
+---
+
 ## v0.1.0 — 2026-05-20
 
 ### Added

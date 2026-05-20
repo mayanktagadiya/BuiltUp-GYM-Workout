@@ -29,6 +29,18 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Database setup
+
+1. Create a project at [supabase.com](https://supabase.com) and copy your credentials into `.env.local`:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   ```
+2. Open the **SQL Editor** in your Supabase dashboard.
+3. Paste the contents of `/supabase/migrations/001_initial_schema.sql` and run it.
+4. Paste the contents of `/supabase/seed.sql` and run it.
+5. Verify: run `select count(*) from exercises;` — should return **44** rows.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
