@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0A0A0A;
+  --surface: #161616;
+  --surface-hover: #1f1f1f;
+  --border: #262626;
+  --text-primary: #FAFAFA;
+  --text-secondary: #A3A3A3;
+  --text-tertiary: #5a5a5a;
+  --accent: #D4A574;
+  --accent-bg: #1a1612;
+  --success: #4ADE80;
+  --danger: #EF4444;
+
+  /* shadcn/ui compatibility variables */
+  --background: var(--bg);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent);
+  --primary-foreground: var(--bg);
+  --secondary: var(--surface-hover);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface);
+  --muted-foreground: var(--text-secondary);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--text-primary);
+  --input: var(--border);
+  --ring: var(--accent);
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: pan-y;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent overscroll bounce on iOS */
+    overscroll-behavior: none;
+    overflow-x: hidden;
+  }
+
+  /* Disable text selection on UI elements, preserve for inputs */
+  *:not(input):not(textarea):not([contenteditable]) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Tabular nums for all numeric displays */
+  .tabular-nums,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Safe area helpers for iPhone notch/home indicator */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Minimum iOS tap target */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
