@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.0 — 2026-05-21
+
+### Added
+
+- **Root layout** (`app/layout.tsx`) — Inter font variable on `<html>`, `bg-background text-foreground font-sans antialiased` body, `max-w-md` page container with `calc(6rem + env(safe-area-inset-bottom))` bottom clearance, BottomNav injected globally
+- **BottomNav** (`components/BottomNav.tsx`) — fixed bottom, `max-w-md` centered, 4 tabs (Today / History / Progress / Settings), gold active state via `usePathname()`, safe-area-inset bottom padding, 0.5px border-top, rounded-t-2xl
+- **Card** — `active` variant (gold border + accent-bg), optional `onClick` with `active:scale-[0.98]`
+- **StatTile** — uppercase 10px label + 22px tabular-nums value, 4 color variants (`default` / `accent` / `success` / `danger`)
+- **Button** — 3 variants (`primary` gold, `secondary`, `ghost`), 3 sizes (`sm` / `md` / `lg`), `fullWidth`, disabled state
+- **NumberInput** — label, `[-]` / `[+]` 32px steppers, 22px tabular-nums display, tap-to-edit inline number input, `min` / `max` / `step` / `suffix`
+- **ProgressBar** — 4px track, gold fill, smooth `transition-all`
+- **Pill** — active (gold bg, black text) / inactive filter chip, rounded-full
+- **Section** — uppercase 11px section label with children below
+- **Placeholder home page** — "BuiltUp" + "Coming together..." subtitle
+
+---
+
 ## v0.2.0 — 2026-05-20
 
 ### Added
