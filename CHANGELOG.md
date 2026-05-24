@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.0 — 2026-05-24
+
+### Added
+
+- **Data layer** (`lib/data/queries.ts`) — five server-side query functions: `getCurrentDayOfWeek()` (Mon=1 … Sun=7), `getCurrentWeekNumber()` (reads/creates `user_preferences.starting_date`, returns weeks elapsed + 1), `getTodaysWorkout()` (workout day + exercises with full exercise join ordered by `order_index`), `getWeekWorkouts()` (all 7 days with `exercise_count` + `total_sets` via single join query), `getWorkoutDay(id)` (full day + exercises by id for use in Prompt 5). Helper `estimateWorkoutMinutes(totalSets)` returns `Math.round(totalSets * 1.5)`.
+- **Home / Today screen** (`app/page.tsx`) — async server component. Header: day + week label, h1 workout name, gold subtitle, calendar-icon link to `/week`. 3-column stat grid (EXERCISES / SETS / EST. TIME). "TODAY'S WORKOUT" section with first 3 exercise cards (name, sets · reps, gold play icon linking `#`). `+N more` placeholder card when exercises > 3. Full-width "Start workout" CTA → `/workout/[id]`. Rest-day state shows centered message + "View week" link.
+- **Week Overview screen** (`app/week/page.tsx`) — async server component. Header: back arrow → `/`, centered "Week N" title, dots-vertical placeholder. Vertical list of 7 day cards: today highlighted with gold active border, pulse dot, "MON · TODAY" label; workout days show name + `N exercises · Nm`; rest days shown at opacity-60 with no chevron. Tapping any workout card routes to `/workout/[id]`.
+
+---
+
 ## v0.3.0 — 2026-05-21
 
 ### Added
