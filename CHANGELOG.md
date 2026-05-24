@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.6.0 — 2026-05-24
+
+### Added
+
+- **Data layer additions** (`lib/data/queries.ts`):
+  - `getSessionHistory()` — returns all completed `workout_sessions` ordered desc, joined with `workout_days` for name, plus aggregated stats (duration, total_sets_logged, total_volume_kg, pr_count) via a 2-query batch (no N+1)
+  - `getSessionStats(sessionId)` — returns `{ duration_seconds, sets_done, total_sets, volume_kg, prs[] }` for a single session
+  - `getStreak()` — returns `{ current, best }` consecutive-day streak computed from all completed sessions
+- **Workout Complete screen** (`app/workout/[id]/complete/page.tsx`) — client component navigated to automatically when `finishWorkout` sets `isCompleted: true`:
+  - Redirects to `/` if `currentSession.id` is null (direct navigation guard)
+  - Computes DURATION / SETS DONE / VOLUME from Zustand store (no extra DB hit); fetches accurate `duration_seconds` from the session row
+  - **PR detection**: for each set_log in the session, queries historical max weight at ≥ same reps before session start; marks new PRs with `is_personal_record = true` in DB
+  - **Streak**: counts consecutive calendar days backward from today across all completed sessions; computes personal best
+  - Layout: gold checkmark circle → h1 "Workout complete" → day name · weekday subtitle → 2×2 StatTile grid → gold PR card (conditionally shown) → flame + streak count with "Personal best" label when current === best → full-width "Done" button
+  - "Done" calls `resetSession()` then navigates to `/`
+- **History tab** (`app/history/page.tsx`) — async server component:
+  - Empty state: dumbbell icon + "No workouts logged yet" + subtitle
+  - Sessions grouped by calendar week (Monday start, via `date-fns startOfWeek`)
+  - Week label "Week of MMM D" above each group
+  - Per-session card: day name + date, stats row (duration · sets · volume · PR badge)
+- **SessionCard** (`app/history/SessionCard.tsx`) — client component; `onClick` shows "Detail view coming soon" alert (detail screen deferred to v2)
+
+---
+
 ## v0.5.0 — 2026-05-24
 
 ### Added

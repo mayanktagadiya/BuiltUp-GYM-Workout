@@ -186,6 +186,176 @@ export async function getPreviousSessionLogs(workoutDayId: string): Promise<Prev
   return result
 }
 
+// ─── Session History ─────────────────────────────────────────────────────────
+
+export type SessionHistoryEntry = {
+  id: string
+  started_at: string
+  completed_at: string
+  duration_seconds: number | null
+  workout_day_name: string
+  total_sets_logged: number
+  total_volume_kg: number
+  pr_count: number
+}
+
+type RawSessionRow = {
+  id: string
+  started_at: string
+  completed_at: string | null
+  duration_seconds: number | null
+  workout_days: { name: string } | null
+}
+
+export async function getSessionHistory(): Promise<SessionHistoryEntry[]> {
+  const supabase = createClient()
+
+  const { data: sessions } = await supabase
+    .from('workout_sessions')
+    .select('id, started_at, completed_at, duration_seconds, workout_days(name)')
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+
+  if (!sessions || sessions.length === 0) return []
+
+  const rawSessions = sessions as unknown as RawSessionRow[]
+  const sessionIds = rawSessions.map((s) => s.id)
+
+  const { data: allLogs } = await supabase
+    .from('set_logs')
+    .select('session_id, weight_kg, reps, is_personal_record')
+    .in('session_id', sessionIds)
+
+  type RawLogRow = {
+    session_id: string
+    weight_kg: number | null
+    reps: number | null
+    is_personal_record: boolean
+  }
+  const rawLogs = (allLogs ?? []) as unknown as RawLogRow[]
+
+  const logsBySession = new Map<string, RawLogRow[]>()
+  for (const log of rawLogs) {
+    if (!logsBySession.has(log.session_id)) logsBySession.set(log.session_id, [])
+    logsBySession.get(log.session_id)!.push(log)
+  }
+
+  return rawSessions
+    .filter((s) => s.completed_at !== null)
+    .map((s) => {
+      const logs = logsBySession.get(s.id) ?? []
+      return {
+        id: s.id,
+        started_at: s.started_at,
+        completed_at: s.completed_at!,
+        duration_seconds: s.duration_seconds,
+        workout_day_name: s.workout_days?.name ?? 'Workout',
+        total_sets_logged: logs.length,
+        total_volume_kg: logs.reduce(
+          (sum, l) => sum + Number(l.weight_kg ?? 0) * (l.reps ?? 0),
+          0
+        ),
+        pr_count: logs.filter((l) => l.is_personal_record).length,
+      }
+    })
+}
+
+export type SessionStats = {
+  duration_seconds: number | null
+  sets_done: number
+  total_sets: number
+  volume_kg: number
+  prs: { exerciseName: string; weight: number; reps: number }[]
+}
+
+export async function getSessionStats(sessionId: string): Promise<SessionStats | null> {
+  const supabase = createClient()
+
+  const { data: session } = await supabase
+    .from('workout_sessions')
+    .select('duration_seconds, workout_day_id')
+    .eq('id', sessionId)
+    .single()
+
+  if (!session) return null
+
+  const [logsResult, wdesResult] = await Promise.all([
+    supabase
+      .from('set_logs')
+      .select('weight_kg, reps, is_personal_record, exercises(name)')
+      .eq('session_id', sessionId),
+    supabase
+      .from('workout_day_exercises')
+      .select('target_sets')
+      .eq('workout_day_id', session.workout_day_id),
+  ])
+
+  type RawLogWithExercise = {
+    weight_kg: number | null
+    reps: number | null
+    is_personal_record: boolean
+    exercises: { name: string } | null
+  }
+  const rawLogs = (logsResult.data ?? []) as unknown as RawLogWithExercise[]
+  const totalSets = (wdesResult.data ?? []).reduce((sum, w) => sum + w.target_sets, 0)
+
+  return {
+    duration_seconds: session.duration_seconds,
+    sets_done: rawLogs.length,
+    total_sets: totalSets,
+    volume_kg: rawLogs.reduce((sum, l) => sum + Number(l.weight_kg ?? 0) * (l.reps ?? 0), 0),
+    prs: rawLogs
+      .filter((l) => l.is_personal_record)
+      .map((l) => ({
+        exerciseName: l.exercises?.name ?? 'Exercise',
+        weight: Number(l.weight_kg ?? 0),
+        reps: l.reps ?? 0,
+      })),
+  }
+}
+
+export async function getStreak(): Promise<{ current: number; best: number }> {
+  const supabase = createClient()
+
+  const { data: sessions } = await supabase
+    .from('workout_sessions')
+    .select('completed_at')
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: true })
+
+  if (!sessions || sessions.length === 0) return { current: 0, best: 0 }
+
+  const days = new Set(sessions.map((s) => s.completed_at!.split('T')[0]))
+  const sorted = Array.from(days).sort()
+
+  let best = 1
+  let run = 1
+  for (let i = 1; i < sorted.length; i++) {
+    const diff = Math.round(
+      (new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86400000
+    )
+    if (diff === 1) {
+      run++
+      if (run > best) best = run
+    } else {
+      run = 1
+    }
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let current = 0
+  const d = new Date(today)
+  while (days.has(d.toISOString().split('T')[0])) {
+    current++
+    d.setDate(d.getDate() - 1)
+  }
+
+  return { current, best }
+}
+
+// ─── Workout Day ──────────────────────────────────────────────────────────────
+
 export async function getWorkoutDay(id: string): Promise<TodaysWorkoutResult | null> {
   const supabase = createClient()
 
