@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.5.0 — 2026-05-24
+
+### Added
+
+- **framer-motion** installed for animated overlays
+- **Zustand workout store** (`lib/store/workoutStore.ts`) — full rewrite with persist middleware (localStorage, key `buildup-workout-v2`). State: `currentSession`, `exercises`, `currentExerciseIndex`, `setLogs`, `restTimer`, `offlineQueue`, `isCompleted`. Actions: `startSession` (creates `workout_sessions` row, initialises per-set log entries), `updateSet`, `completeSet` (writes `set_logs` to Supabase; queues offline), `uncompleteSet` (deletes DB row + clears offline queue entry), `advanceToNextExercise`, `goToExercise`, `startRest`, `tickRest`, `skipRest` (auto-advances to next exercise when last set of exercise was completed), `addRestTime`, `setRestPreset` (proportional remaining time), `finishWorkout` (updates `completed_at` + `duration_seconds`, sets `isCompleted: true`), `syncOfflineQueue`, `resetSession`. `restTimer` and `isCompleted` are intentionally NOT persisted.
+- **`getPreviousSessionLogs`** (`lib/data/queries.ts`) — fetches most-recent completed session for a workout day and returns `Record<exerciseId, [{weight_kg, reps}]>` for previous-session display and weight defaults.
+- **Active Workout screen** (`app/workout/[id]/page.tsx` + `app/workout/[id]/WorkoutSession.tsx`) — server component fetches workout + previous logs; client component handles all interaction:
+  - Top bar: X (exit confirm dialog), "EXERCISE N OF M" counter, ⋮ (options bottom sheet with Skip / Watch video / Replace — last is coming-soon)
+  - Full-width `ProgressBar` tracking total completed sets across all exercises
+  - Exercise header: name (h1), muscle group + set count subtitle, play icon → `#` (video modal Prompt 8)
+  - "Last session" line using previous session's set 1 weight/reps; "First time — start light" when no history
+  - Set cards: **completed** (opacity 55%, green `CheckCircle2`, weight + reps display, edit pencil), **active** (gold border + accent-bg `Card`, two `NumberInput` boxes in inner `bg-[var(--bg)]` cards — weight step 2.5kg, reps step 1 — plus "Complete set" primary button), **future** (surface card, tertiary placeholders)
+  - Editing a completed set: calls `uncompleteSet`, re-opens as active, clears offline queue duplicate
+  - Previous / Next exercise navigation arrows (shown when applicable)
+  - Offline pill: "Offline — will sync" shown when `navigator.onLine === false`; `syncOfflineQueue` called on reconnect
+  - Session resumes from localStorage on re-visit; re-initializes only when workout day changes
+- **Rest timer overlay** (`components/RestTimer.tsx`) — framer-motion `AnimatePresence` slide-up from bottom, 60 vh, fixed position, `max-w-md` centered:
+  - Completed set summary label (exercise name, set N, weight × reps)
+  - 64px tabular-nums gold countdown (turns red ≤ 5s); "of Xm:ss" subtitle
+  - Gold `ProgressBar`
+  - Three preset buttons (60s / 90s / 120s); active preset has gold border; switching changes remaining proportionally
+  - "+15s" and "Skip rest" buttons
+  - "NEXT UP" card: next set or next exercise; smart weight suggestion (≥ target reps → +2.5kg green ↑; < target → same weight)
+  - On reaching zero: `navigator.vibrate([200,100,200])`, 440 Hz Web Audio sine beep for 200 ms, auto-dismiss after 1 s
+  - Auto-advance: after dismissal, `skipRest` calls `advanceToNextExercise` if the just-completed set was the last of its exercise; when past last exercise, `finishWorkout` is called and component navigates to `/workout/[id]/complete` (404 until Prompt 6)
+
+---
+
 ## v0.4.0 — 2026-05-24
 
 ### Added

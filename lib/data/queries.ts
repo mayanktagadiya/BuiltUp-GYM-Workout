@@ -152,6 +152,40 @@ export async function getWeekWorkouts(): Promise<WeekWorkoutDaySummary[]> {
   })
 }
 
+export type PreviousSetLog = { weight_kg: number | null; reps: number | null }
+export type PreviousSessionLogs = Record<string, (PreviousSetLog | undefined)[]>
+
+export async function getPreviousSessionLogs(workoutDayId: string): Promise<PreviousSessionLogs> {
+  const supabase = createClient()
+
+  const { data: session } = await supabase
+    .from('workout_sessions')
+    .select('id')
+    .eq('workout_day_id', workoutDayId)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!session) return {}
+
+  const { data: logs } = await supabase
+    .from('set_logs')
+    .select('exercise_id, set_number, weight_kg, reps')
+    .eq('session_id', session.id)
+    .order('set_number')
+
+  const result: PreviousSessionLogs = {}
+  for (const log of logs ?? []) {
+    if (!result[log.exercise_id]) result[log.exercise_id] = []
+    result[log.exercise_id][log.set_number - 1] = {
+      weight_kg: log.weight_kg !== null ? Number(log.weight_kg) : null,
+      reps: log.reps,
+    }
+  }
+  return result
+}
+
 export async function getWorkoutDay(id: string): Promise<TodaysWorkoutResult | null> {
   const supabase = createClient()
 
