@@ -354,6 +354,200 @@ export async function getStreak(): Promise<{ current: number; best: number }> {
   return { current, best }
 }
 
+// ─── Progress ────────────────────────────────────────────────────────────────
+
+export type ExerciseBasic = {
+  id: string
+  name: string
+  muscle_group: string
+}
+
+export type ExerciseGroup = {
+  muscleGroup: string
+  exercises: ExerciseBasic[]
+}
+
+export type ExerciseProgressPoint = {
+  date: string
+  weekLabel: string
+  topSetWeight: number
+  topSetReps: number
+  estimated1RM: number
+}
+
+export type ExerciseStats = {
+  current: { weight: number; reps: number } | null
+  best: { weight: number; reps: number } | null
+  deltaLast30Days: number | null
+}
+
+export async function getMostRecentlyLoggedExercise(): Promise<ExerciseBasic | null> {
+  const supabase = createClient()
+
+  const { data } = await supabase
+    .from('set_logs')
+    .select('exercise_id, completed_at, exercises(id, name, muscle_group)')
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!data) return null
+  return (data.exercises as unknown as ExerciseBasic) ?? null
+}
+
+export async function getAllExercisesGroupedByMuscle(): Promise<ExerciseGroup[]> {
+  const supabase = createClient()
+
+  const { data } = await supabase
+    .from('exercises')
+    .select('id, name, muscle_group')
+    .order('muscle_group')
+    .order('name')
+
+  const groupMap = new Map<string, ExerciseBasic[]>()
+  for (const ex of data ?? []) {
+    if (!groupMap.has(ex.muscle_group)) groupMap.set(ex.muscle_group, [])
+    groupMap.get(ex.muscle_group)!.push(ex as ExerciseBasic)
+  }
+
+  return Array.from(groupMap.entries()).map(([muscleGroup, exercises]) => ({
+    muscleGroup,
+    exercises,
+  }))
+}
+
+export async function getExerciseProgressData(exerciseId: string): Promise<ExerciseProgressPoint[]> {
+  const supabase = createClient()
+
+  const { data: sessions } = await supabase
+    .from('workout_sessions')
+    .select('id, started_at')
+    .not('completed_at', 'is', null)
+    .order('started_at', { ascending: true })
+
+  if (!sessions || sessions.length === 0) return []
+
+  const sessionIds = sessions.map((s) => s.id)
+  const sessionDateMap = new Map(sessions.map((s) => [s.id, s.started_at.split('T')[0]]))
+
+  const { data: logs } = await supabase
+    .from('set_logs')
+    .select('session_id, weight_kg, reps')
+    .eq('exercise_id', exerciseId)
+    .in('session_id', sessionIds)
+
+  if (!logs || logs.length === 0) return []
+
+  const bySession = new Map<string, { date: string; topWeight: number; topReps: number }>()
+
+  for (const log of logs) {
+    const date = sessionDateMap.get(log.session_id)!
+    const weight = Number(log.weight_kg ?? 0)
+    const reps = Number(log.reps ?? 0)
+
+    if (!bySession.has(log.session_id)) {
+      bySession.set(log.session_id, { date, topWeight: weight, topReps: reps })
+    } else {
+      const ex = bySession.get(log.session_id)!
+      if (weight > ex.topWeight) {
+        ex.topWeight = weight
+        ex.topReps = reps
+      }
+    }
+  }
+
+  const entries = Array.from(bySession.values()).sort((a, b) =>
+    a.date.localeCompare(b.date)
+  )
+
+  if (entries.length === 0) return []
+
+  const firstDate = new Date(entries[0].date)
+
+  return entries.map((entry) => {
+    const weekNum =
+      Math.floor(
+        (new Date(entry.date).getTime() - firstDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
+      ) + 1
+    return {
+      date: entry.date,
+      weekLabel: `W${weekNum}`,
+      topSetWeight: entry.topWeight,
+      topSetReps: entry.topReps,
+      estimated1RM: Math.round(entry.topWeight * (1 + entry.topReps / 30) * 10) / 10,
+    }
+  })
+}
+
+export async function getExerciseStats(exerciseId: string): Promise<ExerciseStats> {
+  const supabase = createClient()
+
+  const { data: sessions } = await supabase
+    .from('workout_sessions')
+    .select('id, started_at')
+    .not('completed_at', 'is', null)
+    .order('started_at', { ascending: false })
+
+  if (!sessions || sessions.length === 0) {
+    return { current: null, best: null, deltaLast30Days: null }
+  }
+
+  const sessionIds = sessions.map((s) => s.id)
+
+  const { data: logs } = await supabase
+    .from('set_logs')
+    .select('session_id, weight_kg, reps')
+    .eq('exercise_id', exerciseId)
+    .in('session_id', sessionIds)
+
+  if (!logs || logs.length === 0) {
+    return { current: null, best: null, deltaLast30Days: null }
+  }
+
+  const logsBySession = new Map<string, { weight: number; reps: number }[]>()
+  for (const log of logs) {
+    if (!logsBySession.has(log.session_id)) logsBySession.set(log.session_id, [])
+    logsBySession.get(log.session_id)!.push({
+      weight: Number(log.weight_kg ?? 0),
+      reps: log.reps ?? 0,
+    })
+  }
+
+  const mostRecentId = sessions.map((s) => s.id).find((id) => logsBySession.has(id))
+  let current: { weight: number; reps: number } | null = null
+  if (mostRecentId) {
+    const sl = logsBySession.get(mostRecentId)!
+    current = sl.reduce((b, l) => (l.weight >= b.weight ? l : b), sl[0])
+  }
+
+  let best: { weight: number; reps: number } | null = null
+  let bestWeight = 0
+  for (const sl of Array.from(logsBySession.values())) {
+    for (const l of sl) {
+      if (l.weight > bestWeight) {
+        bestWeight = l.weight
+        best = l
+      }
+    }
+  }
+
+  let deltaLast30Days: number | null = null
+  if (current !== null) {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 30)
+    const oldId = sessions
+      .filter((s) => new Date(s.started_at) <= cutoff)
+      .map((s) => s.id)
+      .find((id) => logsBySession.has(id))
+    if (oldId) {
+      const oldTop = logsBySession.get(oldId)!.reduce((max, l) => Math.max(max, l.weight), 0)
+      deltaLast30Days = Math.round((current.weight - oldTop) * 10) / 10
+    }
+  }
+
+  return { current, best, deltaLast30Days }
+}
+
 // ─── Workout Day ──────────────────────────────────────────────────────────────
 
 export async function getWorkoutDay(id: string): Promise<TodaysWorkoutResult | null> {

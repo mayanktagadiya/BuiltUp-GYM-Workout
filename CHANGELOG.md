@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.7.0 — 2026-05-26
+
+### Added
+
+- **Data layer** (`lib/data/queries.ts`) — four new server-side query functions for progress:
+  - `getMostRecentlyLoggedExercise()` — returns the most recently logged exercise (used as default selection on Progress tab)
+  - `getAllExercisesGroupedByMuscle()` — returns `ExerciseGroup[]` ordered by muscle group + name, for the picker modal
+  - `getExerciseProgressData(exerciseId)` — returns `ExerciseProgressPoint[]` (one entry per completed session that contained this exercise): `date`, `weekLabel` (`W1`, `W2`… relative to first session), `topSetWeight`, `topSetReps`, `estimated1RM` (Epley formula `weight × (1 + reps/30)`)
+  - `getExerciseStats(exerciseId)` — returns `{ current, best, deltaLast30Days }` — current is the most recent session's top set, best is the all-time heaviest set, delta is current weight minus weight ~30 days ago
+  - All progress queries use a 2-query pattern (sessions first, then set_logs `.in(sessionIds)`) for reliable completed-session filtering
+- **Progress screen** (`app/progress/page.tsx` + `app/progress/ProgressClient.tsx`):
+  - Server component fetches initial data (default exercise + its chart data + stats) and passes to client component as props — no loading flash on first paint
+  - Muscle group pill row (All / Back / Chest / Legs / Arms / Shoulders / Core) sets initial filter for the picker
+  - Exercise selector `Card` (search icon + exercise name + chevron) opens `ExercisePickerSheet`
+  - 3-column `StatTile` row: CURRENT (`{weight}kg`), +30 DAYS (signed delta, green/red), BEST (gold accent)
+  - **Recharts `LineChart`**: dark theme (CartesianGrid `var(--border)` dashed, axes `var(--text-secondary)` 9px), primary gold line for estimated 1RM (`strokeWidth=2`), faded dashed secondary line for raw top-set weight, hollow dots on all points, filled gold dot on the latest point, no tooltip
+  - Empty state: TrendingUp icon + "Start logging to see your progress"
+  - Loading state while re-fetching after exercise change
+  - **Recent Sessions** section: last 5 sessions for the exercise, compact cards with date + `{weight}kg × {reps}` right-aligned tabular nums
+  - When exercise changes, re-fetches via browser Supabase client (no page reload)
+- **ExercisePickerSheet** (`components/ExercisePickerSheet.tsx`) — framer-motion bottom sheet (80% screen height):
+  - Drag handle + close button
+  - Search input filters exercise list case-insensitively
+  - Filter chips (All / Back / Chest / Legs / Arms / Shoulders / Core) — "Arms" maps to Biceps + Triceps muscle groups
+  - Scrollable grouped list with section headers; selected exercise highlighted in gold with checkmark
+  - Backdrop click closes sheet; selecting exercise closes sheet and loads its data
+
 ## v0.6.0 — 2026-05-24
 
 ### Added
