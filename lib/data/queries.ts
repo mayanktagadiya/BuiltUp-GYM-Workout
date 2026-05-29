@@ -105,7 +105,8 @@ export async function getTodaysWorkout(): Promise<TodaysWorkoutResult | null> {
     .from('workout_days')
     .select('*')
     .eq('day_of_week', dayOfWeek)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
   if (error || !workoutDay) return null
 
@@ -137,19 +138,27 @@ export async function getWeekWorkouts(): Promise<WeekWorkoutDaySummary[]> {
 
   const days = rawDays as unknown as RawDayWithExercises[]
 
-  return days.map((day) => {
-    const wdes = day.workout_day_exercises ?? []
-    return {
-      id: day.id,
-      day_of_week: day.day_of_week,
-      name: day.name,
-      subtitle: day.subtitle,
-      is_rest_day: day.is_rest_day,
-      created_at: day.created_at,
-      exercise_count: wdes.length,
-      total_sets: wdes.reduce((sum, e) => sum + e.target_sets, 0),
-    }
-  })
+  // Deduplicate by day_of_week in case the seed ran more than once
+  const seenDays = new Set<number>()
+  return days
+    .filter((day) => {
+      if (seenDays.has(day.day_of_week)) return false
+      seenDays.add(day.day_of_week)
+      return true
+    })
+    .map((day) => {
+      const wdes = day.workout_day_exercises ?? []
+      return {
+        id: day.id,
+        day_of_week: day.day_of_week,
+        name: day.name,
+        subtitle: day.subtitle,
+        is_rest_day: day.is_rest_day,
+        created_at: day.created_at,
+        exercise_count: wdes.length,
+        total_sets: wdes.reduce((sum, e) => sum + e.target_sets, 0),
+      }
+    })
 }
 
 export type PreviousSetLog = { weight_kg: number | null; reps: number | null }
@@ -567,7 +576,13 @@ export async function getAllExercises(): Promise<Exercise[]> {
     .select('*')
     .order('muscle_group')
     .order('name')
-  return (data ?? []) as Exercise[]
+  // Deduplicate by name in case the seed ran more than once
+  const seen = new Set<string>()
+  return (data ?? []).filter((ex) => {
+    if (seen.has(ex.name)) return false
+    seen.add(ex.name)
+    return true
+  }) as Exercise[]
 }
 
 export async function getExerciseById(id: string): Promise<Exercise | null> {
