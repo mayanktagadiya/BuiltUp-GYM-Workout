@@ -9,6 +9,9 @@ export type UserPreferences = {
   name: string | null
   starting_weight_kg: number | null
   starting_date: string | null
+  default_dumbbell_kg: number | null
+  default_machine_kg: number | null
+  default_barbell_kg: number | null
 }
 
 const LS_KEY = 'buildup-prefs'

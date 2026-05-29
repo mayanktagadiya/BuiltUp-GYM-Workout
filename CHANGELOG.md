@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.1.0 — 2026-05-29
+
+### Added
+
+- **Equipment-based default weights** — workout sets are now pre-filled based on exercise equipment type and user preferences. Dumbbells default to `default_dumbbell_kg`, machines/cables to `default_machine_kg`, barbells to `default_barbell_kg` (all stored in `user_preferences`). Falls back to 5 kg / 50 kg / 20 kg if the user hasn't set a preference yet.
+- **Default weights section in Settings** — three number inputs (Dumbbell, Machine / Cable, Barbell) added between Preferences and Data sections. Values are debounced-saved to Supabase and immediately reflected in the next workout session.
+
+### Changed
+
+- Settings screen version bump: 1.0.0 → 1.1.0
+
+### Database
+
+Two columns added to `exercises` table and three columns added to `user_preferences`:
+```sql
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS equipment text;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS default_dumbbell_kg numeric;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS default_machine_kg numeric;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS default_barbell_kg numeric;
+```
+
+---
+
 ## v1.0.0 — 2026-05-29
 
 ### Added

@@ -59,6 +59,7 @@ export type TodaysWorkoutExercise = {
     secondary_muscles: string | null
     video_url: string | null
     form_cues: string | null
+    equipment: string | null
     created_at: string
   }
 }

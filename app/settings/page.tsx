@@ -320,6 +320,63 @@ export default function SettingsPage() {
         </Card>
       </Section>
 
+      {/* DEFAULT WEIGHTS */}
+      <Section label="Default weights">
+        <Card className="p-0 overflow-hidden">
+          <Row label="Dumbbell (each)">
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                value={prefs?.default_dumbbell_kg ?? ''}
+                onChange={(e) =>
+                  updateDebounced('default_dumbbell_kg', e.target.value ? Number(e.target.value) : null)
+                }
+                placeholder="5"
+                step="0.5"
+                min="0"
+                className="text-right bg-transparent outline-none text-sm w-16"
+                style={{ color: 'var(--text-primary)' }}
+              />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>kg</span>
+            </div>
+          </Row>
+          <Row label="Machine / Cable">
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                value={prefs?.default_machine_kg ?? ''}
+                onChange={(e) =>
+                  updateDebounced('default_machine_kg', e.target.value ? Number(e.target.value) : null)
+                }
+                placeholder="50"
+                step="5"
+                min="0"
+                className="text-right bg-transparent outline-none text-sm w-16"
+                style={{ color: 'var(--text-primary)' }}
+              />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>kg</span>
+            </div>
+          </Row>
+          <Row label="Barbell" border={false}>
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                value={prefs?.default_barbell_kg ?? ''}
+                onChange={(e) =>
+                  updateDebounced('default_barbell_kg', e.target.value ? Number(e.target.value) : null)
+                }
+                placeholder="20"
+                step="2.5"
+                min="0"
+                className="text-right bg-transparent outline-none text-sm w-16"
+                style={{ color: 'var(--text-primary)' }}
+              />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>kg</span>
+            </div>
+          </Row>
+        </Card>
+      </Section>
+
       {/* DATA */}
       <Section label="Data">
         <Card className="p-0 overflow-hidden">
@@ -383,7 +440,7 @@ export default function SettingsPage() {
         <Card className="p-0 overflow-hidden">
           <Row label="Version">
             <span className="text-sm shrink-0" style={{ color: 'var(--text-primary)' }}>
-              1.0.0
+              1.1.0
             </span>
           </Row>
           <Row label="Built for">

@@ -12,6 +12,7 @@ export type Database = {
           video_url: string | null
           form_cues: string | null
           default_weight_kg: number | null
+          equipment: string | null
           created_at: string
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           video_url?: string | null
           form_cues?: string | null
           default_weight_kg?: number | null
+          equipment?: string | null
           created_at?: string
         }
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           video_url?: string | null
           form_cues?: string | null
           default_weight_kg?: number | null
+          equipment?: string | null
           created_at?: string
         }
       }
@@ -187,6 +190,9 @@ export type Database = {
           name: string | null
           starting_weight_kg: number | null
           starting_date: string | null
+          default_dumbbell_kg: number | null
+          default_machine_kg: number | null
+          default_barbell_kg: number | null
         }
         Insert: {
           id?: string
@@ -197,6 +203,9 @@ export type Database = {
           name?: string | null
           starting_weight_kg?: number | null
           starting_date?: string | null
+          default_dumbbell_kg?: number | null
+          default_machine_kg?: number | null
+          default_barbell_kg?: number | null
         }
         Update: {
           id?: string
@@ -207,6 +216,9 @@ export type Database = {
           name?: string | null
           starting_weight_kg?: number | null
           starting_date?: string | null
+          default_dumbbell_kg?: number | null
+          default_machine_kg?: number | null
+          default_barbell_kg?: number | null
         }
       }
     }

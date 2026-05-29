@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X, MoreVertical, Play, ChevronLeft, ChevronRight, CheckCircle2, Pencil } from 'lucide-react'
 import { useWorkoutStore, WorkoutExercise } from '@/lib/store/workoutStore'
 import { TodaysWorkoutResult, PreviousSessionLogs } from '@/lib/data/queries'
+import { getLocalPreferences } from '@/lib/data/preferences'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -53,6 +54,18 @@ export function WorkoutSession({ workoutData, prevLogs, workoutDayId }: Props) {
     if (!needsInit || initRef.current) return
     initRef.current = true
 
+    const prefs = getLocalPreferences()
+    function getDefaultWeight(equipment: string | null): number | null {
+      if (!prefs) return null
+      switch (equipment) {
+        case 'dumbbell': return prefs.default_dumbbell_kg ?? 5
+        case 'machine':
+        case 'cable': return prefs.default_machine_kg ?? 50
+        case 'barbell': return prefs.default_barbell_kg ?? 20
+        default: return null
+      }
+    }
+
     const mappedExercises: WorkoutExercise[] = workoutData.exercises.map(wde => ({
       id: wde.exercise.id,
       name: wde.exercise.name,
@@ -63,7 +76,7 @@ export function WorkoutSession({ workoutData, prevLogs, workoutDayId }: Props) {
       targetSets: wde.target_sets,
       targetRepsPerSet: wde.target_reps_per_set,
       restSeconds: wde.rest_seconds,
-      defaultWeightKg: (wde.exercise as unknown as { default_weight_kg: number | null }).default_weight_kg ?? null,
+      defaultWeightKg: getDefaultWeight(wde.exercise.equipment ?? null),
     }))
 
     startSession(workoutDayId, mappedExercises).then(() => {
