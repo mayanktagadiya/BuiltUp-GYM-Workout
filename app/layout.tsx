@@ -70,7 +70,10 @@ export default function RootLayout({
       <body className="bg-background text-foreground font-sans antialiased">
         <div
           className="max-w-md mx-auto min-h-screen relative"
-          style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
+          style={{
+            paddingTop: 'env(safe-area-inset-top)',
+            paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))',
+          }}
         >
           {children}
         </div>

@@ -65,10 +65,11 @@ export default async function HomePage() {
         </div>
         <Link
           href="/week"
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: 'var(--surface)', border: '0.5px solid var(--border)' }}
+          className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent)' }}
+          aria-label="View week schedule"
         >
-          <CalendarDays size={18} style={{ color: 'var(--text-secondary)' }} />
+          <CalendarDays size={18} style={{ color: 'var(--accent)' }} />
         </Link>
       </div>
 
