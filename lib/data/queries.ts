@@ -548,6 +548,70 @@ export async function getExerciseStats(exerciseId: string): Promise<ExerciseStat
   return { current, best, deltaLast30Days }
 }
 
+// ─── Exercise Library ─────────────────────────────────────────────────────────
+
+export type Exercise = {
+  id: string
+  name: string
+  muscle_group: string
+  secondary_muscles: string | null
+  video_url: string | null
+  form_cues: string | null
+  created_at: string
+}
+
+export async function getAllExercises(): Promise<Exercise[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('exercises')
+    .select('*')
+    .order('muscle_group')
+    .order('name')
+  return (data ?? []) as Exercise[]
+}
+
+export async function getExerciseById(id: string): Promise<Exercise | null> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('exercises')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+  return data as Exercise | null
+}
+
+export type WorkoutDayForExercise = {
+  workoutDayId: string
+  dayOfWeek: number
+  name: string
+}
+
+export async function getWorkoutDaysContainingExercise(
+  exerciseId: string
+): Promise<WorkoutDayForExercise[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('workout_day_exercises')
+    .select('workout_day_id, workout_days(day_of_week, name)')
+    .eq('exercise_id', exerciseId)
+
+  if (!data) return []
+
+  type RawRow = {
+    workout_day_id: string
+    workout_days: { day_of_week: number; name: string } | null
+  }
+
+  return (data as unknown as RawRow[])
+    .filter((row) => row.workout_days !== null)
+    .map((row) => ({
+      workoutDayId: row.workout_day_id,
+      dayOfWeek: row.workout_days!.day_of_week,
+      name: row.workout_days!.name,
+    }))
+    .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+}
+
 // ─── Workout Day ──────────────────────────────────────────────────────────────
 
 export async function getWorkoutDay(id: string): Promise<TodaysWorkoutResult | null> {

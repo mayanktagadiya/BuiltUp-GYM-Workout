@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.8.0 — 2026-05-29
+
+### Added
+
+- **`lib/utils/youtube.ts`** — `extractYouTubeId(url)` helper; handles `youtube.com/watch?v=`, `youtu.be/`, `/embed/`, `/shorts/` URL formats
+- **`components/LiteYoutubeEmbed.tsx`** — reusable client component; renders YouTube thumbnail with gold play-button overlay, swaps to `<iframe autoplay>` on tap; shows "Video coming soon" black box for PLACEHOLDER/missing URLs; used on exercise detail page
+- **`components/VideoModal.tsx`** — framer-motion bottom sheet (70vh, slides up from bottom, backdrop tap or X to close); contains the same lite-youtube embed pattern plus form cues text and optional "View on YouTube" link; `playing` state resets when modal closes
+- **Data layer additions** (`lib/data/queries.ts`):
+  - `Exercise` type — full exercise row with all columns
+  - `getAllExercises()` — returns all exercises ordered by muscle group + name
+  - `getExerciseById(id)` — single exercise by UUID
+  - `getWorkoutDaysContainingExercise(exerciseId)` — returns `WorkoutDayForExercise[]` (workoutDayId, dayOfWeek, name) sorted by day; used for "Used in" section on detail page
+- **Exercise Library** (`app/exercises/page.tsx` + `app/exercises/ExercisesClient.tsx`):
+  - Server component fetches all exercises, passes to client component (no loading flash)
+  - Header with h1 "Exercises" + search toggle (X closes + clears query)
+  - Horizontally scrollable filter chip row (All / Back / Chest / Legs / Arms / Shoulders / Core); "Arms" maps to Biceps + Triceps; active chip gold
+  - Inline search input (autofocused when opened) — client-side substring match on name
+  - Vertical list: 48×48 gold play-icon box (opens VideoModal, stops Link navigation via stopPropagation) + name + muscle group subtitle + chevron; tapping anywhere else navigates to `/exercises/[id]`
+  - Empty state "No exercises found" when filters + search yield nothing
+- **Exercise Detail** (`app/exercises/[id]/page.tsx`):
+  - Async server component; back arrow → `/exercises`, centered exercise name
+  - `LiteYoutubeEmbed` for the 16:9 video area
+  - Pill row: primary muscle group (gold/active) + each secondary muscle parsed from comma-separated string
+  - "FORM CUES" section with body text (only shown if form_cues is non-null)
+  - "USED IN" section — Card list of workout days containing this exercise, each linking to `/workout/[id]`
+- **VideoModal wired across app**:
+  - `app/HomeExerciseList.tsx` (new client component) — extracted from `app/page.tsx`; manages `videoOpen` + `videoExercise` state; renders exercise cards with functional play buttons; `app/page.tsx` stays a server component
+  - `app/workout/[id]/WorkoutSession.tsx` — play button in exercise header now opens VideoModal with current exercise data (name, muscle group, video URL, form cues)
+
 ## v0.7.0 — 2026-05-26
 
 ### Added

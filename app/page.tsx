@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, Play } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 import {
   getTodaysWorkout,
   getCurrentWeekNumber,
@@ -7,8 +7,8 @@ import {
   getCurrentDayOfWeek,
 } from '@/lib/data/queries'
 import { StatTile } from '@/components/ui/StatTile'
-import { Card } from '@/components/ui/Card'
 import { Section } from '@/components/ui/Section'
+import { HomeExerciseList } from './HomeExerciseList'
 
 const DAY_NAMES = ['', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
@@ -47,8 +47,6 @@ export default async function HomePage() {
   }
 
   const estTime = estimateWorkoutMinutes(totalSets)
-  const visibleExercises = exercises.slice(0, 3)
-  const remainingCount = exercises.length - 3
 
   return (
     <main className="px-5 pt-6 pb-4 flex flex-col gap-6">
@@ -83,36 +81,7 @@ export default async function HomePage() {
 
       {/* Exercise list */}
       <Section label="TODAY'S WORKOUT">
-        <div className="flex flex-col gap-2">
-          {visibleExercises.map((wde) => (
-            <Card key={wde.id}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-body font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                    {wde.exercise.name}
-                  </p>
-                  <p className="text-label-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    {wde.target_sets} sets · {wde.target_reps_per_set.join(', ')}
-                  </p>
-                </div>
-                <a
-                  href="#"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'var(--bg)' }}
-                >
-                  <Play size={13} fill="var(--accent)" style={{ color: 'var(--accent)' }} />
-                </a>
-              </div>
-            </Card>
-          ))}
-          {remainingCount > 0 && (
-            <Card className="opacity-50">
-              <p className="text-body text-center" style={{ color: 'var(--text-secondary)' }}>
-                +{remainingCount} more
-              </p>
-            </Card>
-          )}
-        </div>
+        <HomeExerciseList exercises={exercises} />
       </Section>
 
       {/* CTA */}

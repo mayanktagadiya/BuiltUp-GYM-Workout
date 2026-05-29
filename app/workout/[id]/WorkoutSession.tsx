@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { RestTimer } from '@/components/RestTimer'
+import { VideoModal } from '@/components/VideoModal'
 
 interface Props {
   workoutData: TodaysWorkoutResult
@@ -26,6 +27,7 @@ export function WorkoutSession({ workoutData, prevLogs, workoutDayId }: Props) {
   const [showOptionsSheet, setShowOptionsSheet] = useState(false)
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null)
   const [isOnline, setIsOnline] = useState(true)
+  const [videoOpen, setVideoOpen] = useState(false)
 
   const {
     currentSession,
@@ -200,14 +202,14 @@ export function WorkoutSession({ workoutData, prevLogs, workoutDayId }: Props) {
             {currentExercise.muscleGroup} · {currentExercise.targetSets} sets
           </p>
         </div>
-        <a
-          href="#"
+        <button
+          onClick={() => setVideoOpen(true)}
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 active:scale-[0.95] transition-transform"
           style={{ background: 'var(--surface)', border: '0.5px solid var(--border)' }}
           aria-label="Watch video"
         >
           <Play size={14} fill="var(--accent)" style={{ color: 'var(--accent)' }} />
-        </a>
+        </button>
       </div>
 
       {/* Previous session */}
@@ -311,6 +313,16 @@ export function WorkoutSession({ workoutData, prevLogs, workoutDayId }: Props) {
           onClose={() => setShowOptionsSheet(false)}
         />
       )}
+
+      {/* Video modal */}
+      <VideoModal
+        open={videoOpen}
+        onClose={() => setVideoOpen(false)}
+        exerciseName={currentExercise.name}
+        muscleGroup={currentExercise.muscleGroup}
+        videoUrl={currentExercise.videoUrl}
+        formCues={currentExercise.formCues}
+      />
     </main>
   )
 }
