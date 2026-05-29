@@ -11,6 +11,7 @@ export type Database = {
           secondary_muscles: string | null
           video_url: string | null
           form_cues: string | null
+          default_weight_kg: number | null
           created_at: string
         }
         Insert: {
@@ -20,6 +21,7 @@ export type Database = {
           secondary_muscles?: string | null
           video_url?: string | null
           form_cues?: string | null
+          default_weight_kg?: number | null
           created_at?: string
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           secondary_muscles?: string | null
           video_url?: string | null
           form_cues?: string | null
+          default_weight_kg?: number | null
           created_at?: string
         }
       }

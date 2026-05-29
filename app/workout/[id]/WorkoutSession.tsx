@@ -63,20 +63,21 @@ export function WorkoutSession({ workoutData, prevLogs, workoutDayId }: Props) {
       targetSets: wde.target_sets,
       targetRepsPerSet: wde.target_reps_per_set,
       restSeconds: wde.rest_seconds,
+      defaultWeightKg: (wde.exercise as unknown as { default_weight_kg: number | null }).default_weight_kg ?? null,
     }))
 
     startSession(workoutDayId, mappedExercises).then(() => {
-      // Apply previous session weights as defaults
+      // Apply previous session weights, falling back to exercise default weight
       for (const ex of mappedExercises) {
         const prevExLogs = prevLogs[ex.id]
-        if (!prevExLogs) continue
         ex.targetRepsPerSet.forEach((_, i) => {
-          const prevWeight =
-            prevExLogs[i]?.weight_kg ??
-            (i > 0 ? prevExLogs[i - 1]?.weight_kg : undefined) ??
+          const weight =
+            prevExLogs?.[i]?.weight_kg ??
+            (i > 0 ? prevExLogs?.[i - 1]?.weight_kg : undefined) ??
+            ex.defaultWeightKg ??
             null
-          if (prevWeight !== null) {
-            useWorkoutStore.getState().updateSet(ex.id, i, { weight: prevWeight })
+          if (weight !== null) {
+            useWorkoutStore.getState().updateSet(ex.id, i, { weight })
           }
         })
       }

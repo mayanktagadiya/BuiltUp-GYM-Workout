@@ -12,6 +12,7 @@ export interface WorkoutExercise {
   targetSets: number
   targetRepsPerSet: number[]
   restSeconds: number
+  defaultWeightKg: number | null
 }
 
 export interface SetLogEntry {
