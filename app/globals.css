@@ -43,8 +43,18 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
     touch-action: pan-y;
     overscroll-behavior: none;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+
+  button:active {
+    transform: scale(0.97);
+    transition: transform 60ms;
   }
 
   body {

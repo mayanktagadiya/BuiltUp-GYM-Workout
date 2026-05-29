@@ -1,5 +1,43 @@
 # Changelog
 
+## v1.0.0 — 2026-05-29
+
+### Added
+
+- **Settings screen** (`app/settings/page.tsx`) — client component with four sections:
+  - PROFILE: Name (editable text, debounced Supabase sync), Starting weight (optional kg, debounced sync), Member since (read-only date from `user_preferences.starting_date`)
+  - PREFERENCES: Weight unit segmented control (kg / lb), Default rest time segmented control (60s / 90s / 120s), Sound on rest complete toggle, Vibration on rest complete toggle — all saved to `user_preferences` immediately and mirrored to localStorage
+  - DATA: "Export all data" button (generates CSV of all set_logs + sessions + exercises, triggers browser download via `Blob + URL.createObjectURL`), "Reset all data" button with inline confirmation dialog (deletes all rows from `set_logs`, `workout_sessions`, `body_weight_logs`)
+  - ABOUT: Version 1.0.0, "Built for May", privacy note
+- **`lib/data/preferences.ts`** — `getUserPreferences()` (fetches Supabase row, creates default on first launch, syncs to localStorage) and `updateUserPreferences(id, partial)` (optimistic localStorage update + async Supabase write). `getLocalPreferences()` returns cached prefs for instant reads
+- **`lib/utils/units.ts`** — `kgToLb(kg)`, `lbToKg(lb)`, `formatWeight(kg, unit)` utility functions
+- **`components/OfflineBanner.tsx`** — client component, fixed top banner, listens to `window online/offline` events; appears only when `navigator.onLine === false`; initialises to `true` to avoid hydration mismatch
+- **`app/offline/page.tsx`** — offline fallback page served by the service worker when navigation fails with no network
+- **PWA polish** (`next.config.js`): added `runtimeCaching` with five strategies — `NetworkFirst` for pages and Supabase API, `CacheFirst` for `/_next/static`, images, and Google Fonts; added `fallbacks.document: '/offline'` so the service worker serves the offline page on navigation failure
+- **`public/manifest.json`**: added `categories: ["health", "fitness"]`, `id: "/"`, `lang: "en"`; updated description to "Personal workout tracker"
+- **`app/globals.css`**: added `-webkit-tap-highlight-color: transparent` on `html`; `button { touch-action: manipulation }` to prevent double-tap zoom; `button:active { transform: scale(0.97); transition: transform 60ms }` for snappy press feedback on all raw buttons
+- **`app/layout.tsx`**: `OfflineBanner` added to root layout
+- **`DEPLOY.md`**: step-by-step guide covering Supabase setup, GitHub push, Vercel deploy, iPhone test, PWA install, friend sharing, and custom domain
+
+### Tech stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 14 (App Router) + TypeScript strict |
+| Styling | Tailwind CSS + shadcn/ui (neutral base) |
+| State | Zustand with persist middleware |
+| Database | Supabase (Postgres) |
+| Charts | Recharts |
+| Animations | framer-motion |
+| PWA | next-pwa (Workbox) |
+| Hosting | Vercel |
+
+### Build credits
+
+Built by Claude Code for May. RMIT 2026.
+
+---
+
 ## v0.8.0 — 2026-05-29
 
 ### Added
