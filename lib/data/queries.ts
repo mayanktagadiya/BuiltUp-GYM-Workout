@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 export function getCurrentDayOfWeek(): number {
   // Vercel servers run UTC — convert to IST (Asia/Kolkata) before reading the weekday
   const dayName = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Kolkata',
+    timeZone: 'Australia/Melbourne',
     weekday: 'long',
   }).format(new Date())
   const map: Record<string, number> = {
