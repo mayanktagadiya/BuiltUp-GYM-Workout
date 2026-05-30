@@ -1,8 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 
 export function getCurrentDayOfWeek(): number {
-  const jsDay = new Date().getDay() // 0=Sun, 1=Mon ... 6=Sat
-  return jsDay === 0 ? 7 : jsDay   // Mon=1, Sun=7
+  // Vercel servers run UTC — convert to IST (Asia/Kolkata) before reading the weekday
+  const dayName = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'long',
+  }).format(new Date())
+  const map: Record<string, number> = {
+    Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4,
+    Friday: 5, Saturday: 6, Sunday: 7,
+  }
+  return map[dayName] ?? 1
 }
 
 export function estimateWorkoutMinutes(totalSets: number): number {
